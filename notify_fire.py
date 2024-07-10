@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import os
+import json
 import boto3
 import uuid
 
@@ -52,7 +53,7 @@ def lambda_handler(event, context):
     # Publicar topico
     response = sns_client.publish(
         TopicArn=os.environ['SNS_TOPIC_ARN'],
-        Message=result,
+        Message=json.dumps(result),
     )
 
     # Retornar el resultado como JSON
