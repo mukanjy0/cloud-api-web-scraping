@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import os
 import boto3
 import uuid
 
@@ -27,41 +28,32 @@ def lambda_handler(event, context):
         }
 
     # Extraer los encabezados de la tabla
-    print(type(table.find('thead').find('th')))
     headers = [header.text for header in table.find('thead').find_all('th')]
+    for i in range(len(headers)):
+        if headers[i] == 'Tipo':
+            idx = i
+            break
 
     # Extraer las filas de la tabla
     rows = []
     for row in table.find('tbody').find_all('tr'):  # Omitir el encabezado
         cells = row.find_all('th')
         cells.extend(row.find_all('td'))
-        if len(cells) > 0:
+        if len(cells) > 0 and 'INCENDIO' in cells[i].text:
             rows.append({headers[i]: cell.text for i, cell in enumerate(cells)})
-
-    # Guardar los datos en DynamoDB
-    dynamodb = boto3.resource('dynamodb')
-    table = dynamodb.Table('TablaWebScrapping')
-
-    # Eliminar todos los elementos de la tabla antes de agregar los nuevos
-    scan = table.scan()
-    with table.batch_writer() as batch:
-        for each in scan['Items']:
-            batch.delete_item(
-                Key={
-                    'id': each['id']
-                }
-            )
-
-    # Insertar los nuevos datos
-    for row in rows:
-        row['id'] = str(uuid.uuid4())  # Generar un ID único para cada entrada
-        table.put_item(Item=row)
 
     # Construir el resultado
     result = {
-        'headers': headers,
-        'rows': rows
+        'fire_cnt': len(rows),
+        'fires': rows
     }
+
+    sns_client = boto3.client('sns')
+    # Publicar topico
+    response = sns_client.publish(
+        TopicArn=os.environ['SNS_TOPIC_ARN'],
+        Message=result,
+    )
 
     # Retornar el resultado como JSON
     return {

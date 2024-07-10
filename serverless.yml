@@ -22,6 +22,20 @@ functions:
           method: get
           cors: true
           integration: lambda
+  notify_fire:
+    handler: notify_fire.lambda_handler # Asegúrarse de que el nombre del archivo y la función coincidan
+    environment:
+      SNS_TOPIC_ARN:
+        Ref: NotifyFire
+    package:
+      include:
+        - ./** # Incluir todo el contenido del directorio
+    events:
+      - http:
+          path: /fire/notify
+          method: get
+          cors: true
+          integration: lambda
 
 resources:
   Resources:
@@ -36,3 +50,7 @@ resources:
           - AttributeName: id
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
+    NotifyFire:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: NotifyFire
