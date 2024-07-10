@@ -58,5 +58,5 @@ resources:
       Properties:
         Protocol: email
         TopicArn:
-          Ref: MySNSTopic
+          Ref: NotifyFire
         Endpoint: ian.gonzalez@utec.edu.pe
