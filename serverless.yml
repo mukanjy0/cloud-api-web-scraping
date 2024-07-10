@@ -53,4 +53,10 @@ resources:
     NotifyFire:
       Type: AWS::SNS::Topic
       Properties:
-        TopicName: NotifyFire
+    EmailSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: email
+        TopicArn:
+          Ref: MySNSTopic
+        Endpoint: ian.gonzalez@utec.edu.pe
